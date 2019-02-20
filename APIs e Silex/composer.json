@@ -1,0 +1,27 @@
+{
+    "name": "henrique/composer",
+    "description": "teste do silex",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Henrique Rampazzo",
+            "email": "henriquesr5899@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+
+    "require": {
+
+    	"silex/silex":"^2.0",
+        "twig/twig":">=1.8,<2.0-dev",
+        "symfony/twig-bridge":"~2.3"
+    },
+
+    "autoload":{
+
+        "psr-4":{
+
+            "Code\\Sistema\\":"src/Code/Sistema/"
+        }
+    }
+}
