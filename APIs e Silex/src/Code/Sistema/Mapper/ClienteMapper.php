@@ -3,8 +3,16 @@
 namespace Code\Sistema\Mapper; //define o namespace da classe
 
 use Code\Sistema\Entity\Cliente; // usa o namespace da classe Cliente 
+use Doctrine\ORM\EntityManager;
 
 class ClienteMapper{
+
+	private $em;
+
+	public function __construct(EntityManager $em){ //injeção de dependencia
+
+		$this->em = $em;
+	}
 
 	private $dados = [
 
@@ -23,9 +31,18 @@ class ClienteMapper{
 
 	public function insert(Cliente $cliente){ //função para inserção fictícia de dados que recebe por parametro um cliente
 
+
+			$this->em->persist($cliente); //seta na lista para inserir no banco
+			$this->em->flush(); //insere os dados
+
 		return [ //exibe um retorno dos dados ficticíos
 
-		"success"=> true
+		"success"=> true,
+		"id" => $cliente->getId(),
+		"nome" => $cliente->getNome(),
+		"email" => $cliente->getEmail(),
+
+
 	];
 }
 

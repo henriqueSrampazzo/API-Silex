@@ -1,58 +1,92 @@
-<?php  
+<?php
 
 namespace Code\Sistema\Service;
 
-use Code\Sistema\Entity\Cliente;
+use Code\Sistema\Entity\Cliente as ClienteEntity;
+use Code\Sistema\Entity\ClienteProfile;
+use Doctrine\ORM\EntityManager;
 
-use Code\Sistema\Mapper\ClienteMapper;
+class ClienteService {
 
-class ClienteService{
+	private $em;
 
-	private $cliente;
-	private $clienteMapper;
+	public function __construct(EntityManager $em) {
+		//criação do método construtor que vai receber as classes que precisa por parametro
 
-	public function __construct(Cliente $cliente, ClienteMapper $clienteMapper){ //criação do método construtor que vai receber as classes que ele precisa por parametro
-
-		$this->cliente = $cliente;  //recebendo e atribuindo valor a variável cliente
-		$this->clienteMapper = $clienteMapper; //recebendo e atribuindo valor a variável clienteMapper
+		$this->em = $em;
 	}
 
-	public function insert(array $data){ //função que envia os dados para serem inseridos 
+	public function insert(array $data) {
+		//função que envia os dados para serem inseridos
 
-		$clienteEntity = $this->cliente; //acessa a classe Cliente
-
+		$clienteEntity = new ClienteEntity; //instancia objeto
 		$clienteEntity->setNome($data["nome"]); //seta o nome do ciente
 		$clienteEntity->setEmail($data["email"]); //seta o email do ciente
 
-		$mapper = $this->clienteMapper; //acessa a classe ClienteMapper
+		if (isset($data['rg']) AND isset($data['cpf'])) {
+// se não tiver vazio executa o codigo abaixo
 
-		$result = $mapper->insert($clienteEntity); //envia os dados para serem inseridos 
+			$clienteProfile = new ClienteProfile();
+			$clienteProfile->setCpf($data['cpf']);
+			$clienteProfile->setRg($data['rg']);
+
+			$this->em->persist($clienteProfile); //persiste os dados
+
+			$clienteEntity->setProfile($clienteProfile); // seta no profile
+		}
+
+		if (count($data['interesse'])) {
+
+			$interesse = explode(",", $data['interesse']);
+
+			foreach ($interesses as $rowInteresse) {
+
+				$interesseEntity = $this->em->getReference("Code\Sistema\Entity\Interesse", $rowInteresse);
+
+				$clienteEntity->addInteresse($interesseEntity);
+			}
+
+		}
+
+		$this->em->persist($clienteEntity);
+		$this->em->flush();
+
+		return $clienteEntity;
+	}
+
+	public function update($id, array $array) {
+
+		$cliente = $this->em->getReference("Code\Sistema\Entity\Cliente", $id); //pega o cliente como referencia, cria uma imitação do objeto real, evita consulta antes de update
+
+		$cliente->setNome($array['nome']);
+		$cliente->setEmail($array['email']);
+
+		$this->em->persist($cliente);
+		$this->em->flush();
+	}
+
+	public function fetchAll() {
+
+		$repo = $this->em->getRepository("Code\Sistema\Entity\Cliente");
+		$result = $repo->getClientesOrdenados();
 
 		return $result;
 	}
 
-	public function update($id, array $array){
+	public function find($id) {
 
-		return $this->clienteMapper->update($id, $array); // função que chama o método update da classe ClienteMapper
+		$repo = $this->em->getRepository("Code\Sistema\Entity\Cliente");
+		$result = $repo->find($id);
+
+		return $result;
 	}
 
-	public function fetchAll(){
+	public function delete($id) {
 
-		return $this->clienteMapper->fetchAll(); // função que chama o método fetchAll da classe ClienteMapper
-	}
+		$cliente = $this->em->getReference("Code\Sistema\Entity\Cliente", $id);
 
-	public function find($id){
+		$this->em->remove($cliente);
 
-		return $this->clienteMapper->find($id); // função que chama o método find da classe ClienteMapper
-	}
-
-	public function delete($id){ //função que exibe um retorno depois do delete
-
-		return[
-
-			"sucess" => true
-		];
+		return true;
 	}
 }
-
-?>
